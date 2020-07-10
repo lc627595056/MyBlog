@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>个人博客管理系统</title>
+    <link rel="stylesheet" type="text/css"
+          href="/source/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css"
+          href="/source/easyui/themes/icon.css">
+    <script type="text/javascript" src="/source/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="/source/easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/source/easyui/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript">
+
+        function formatType(value,row) {
+            return value.typeName;
+        }
+
+        function formatTitle(value,row) {
+            return "<a target='_blank' href='/blog/view/"+row.id+"'>"+row.title+"</a>";
+        }
+
+        function search() {
+            $("#dg").datagrid("load",{"title":$("#s_title").val().trim()})
+        }
+
+        function remove(){
+            //获取所有选中的行
+            var selectedRow =$("#dg").datagrid("getSelections");//getSelections
+            //判断是否有选中行
+            if(selectedRow.length==0){
+                $.messager.alert("系统提示","至少选中一行要删除的数据！","info");
+                return;
+            }
+            //获取选中的id，放到数组中
+            var blogIds = [];
+            for (var i = 0; i < selectedRow.length; i++) {
+                //将选中的id添加到数组中
+                blogIds.push(selectedRow[i].id);
+            }
+            //将上面的数组拼接成字符串
+            var ids = blogIds.join(",");
+            //提示确定是否删除
+            $.messager.confirm("系统提示","您确认想要删除<font color='red'>"+selectedRow.length+"</font>条记录吗？",function(r){
+                if (r){
+                    //发送请求
+                    $.post("/admin/blog/delete",{"ids":ids},function(data){
+                        if(data.success){
+                            $.messager.show({
+                                title:'系统提示',
+                                msg:'博客信息删除成功',
+                                timeout:3000,
+                                showType:'slide'
+                            });
+                            //刷新表格数据
+                            $("#dg").datagrid("reload");
+                        }else{
+                            $.messager.show({
+                                title:'系统提示',
+                                msg:'博客信息删除失败',
+                                timeout:3000,
+                                showType:'slide'
+                            });
+                        }
+                    },"json");
+                }
+            });
+
+        }
+
+        //打开修改tab
+        function openEdit() {
+            //获取选中行
+            var selectedRow =$("#dg").datagrid("getSelections");
+            //只能选中一行
+            if(selectedRow.length!=1){
+                $.messager.alert("系统提示","请选择一行要修改博客！","info");
+                return;
+            }
+            //当前选中行
+            var row = selectedRow[0];
+            //打开一个新的tab选项卡
+            window.parent.openTab("修改博客"+row.title,"/admin/blog/toUpdateBlog?blogId="+row.id,"icon-writeblog");
+        }
+    </script>
+</head>
+
+<body style="margin: 1px">
+<table id="dg" title="博客管理" class="easyui-datagrid" fitColumns="true"
+       pagination="true" rownumbers="true" url="/admin/blog/list" fit="true"
+       toolbar="#toolbar">
+    <thead>
+    <tr>
+        <th field="cb" checkbox="true" align="center"></th>
+        <th field="id" width="20" align="center">编号</th>
+        <th field="title" width="200" align="center" formatter="formatTitle">标题</th>
+        <th field="releaseDate" width="50" align="center">发布日期</th>
+        <th field="blogtype" width="50" align="center" formatter="formatType">博客类型</th>
+    </tr>
+    </thead>
+</table>
+<!-- 工具栏 -->
+<div id="toolbar">
+    <!-- 按钮组 -->
+    <div class="wu-toolbar-button">
+        <a href="#"	class="easyui-linkbutton" iconCls="icon-reload" onclick="reload()"	plain="true">刷新</a>
+        <a href="#"	class="easyui-linkbutton" iconCls="icon-edit" onclick="openEdit()"	plain="true">修改</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" onclick="remove()" plain="true">删除</a>
+    </div>
+    <!-- 搜索条件 -->
+    <div class="wu-toolbar-search">
+        <label>标题：</label><input class="easyui-textbox"
+                                 style="width: 180px" id="s_title">
+        <a href="javascript:search()" class="easyui-linkbutton"
+           iconCls="icon-search">开始检索</a>
+    </div>
+</div>
+</body>
+
+</html>

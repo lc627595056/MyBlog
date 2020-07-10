@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="content">
+    <!--核心部分-->
+    <div class="data_list">
+        <div class="data_list_title">
+            <i class="glyphicon glyphicon-th-large"></i>
+            搜索&nbsp;<font color="red" th:text="${keyWord}">关键字</font>&nbsp;的结果 &nbsp;
+            (总共搜索到&nbsp;<span th:text="${total}">0</span>&nbsp;条记录) </div>
+        <div class="datas search">
+
+            <ul>
+                <li th:if="${total==0}">
+                    <div align="center" style="padding-top: 20px">未查询到结果，请换个关键字试试看！</div>
+                </li>
+
+                <li style="margin-bottom: 20px" th:each="blog:${blogList}">
+                    <span class="title"><a th:href="@{/blog/view/}+${blog.id}" target="_blank" th:utext="${blog.title}">xx</a></span>
+                    <span class="summary">摘要:<span th:utext="${blog.content}"></span></span>
+
+                    <span class="link"><a th:href="@{/blog/view/}+${blog.id}"
+                                          th:text="'http://localhost:8080/blog/view/'+${blog.id}">xxx</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                     发布日期：	<span th:text="${blog.releaseDateStr}"></span></span>
+                    <hr style="height: 5px; border: none; border-top: 1px dashed gray; padding-bottom: 10px;" />
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div th:utext="${pageCode}"></div>
+</div>
+</body>
+</html>

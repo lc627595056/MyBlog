@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.dao.BlogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.blog.entity.Blog">
+        <id column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="summary" property="summary" />
+        <result column="releaseDate" property="releaseDate" />
+        <result column="clickHit" property="clickHit" />
+        <result column="replyHit" property="replyHit" />
+        <result column="content" property="content" />
+        <result column="typeId" property="typeId" />
+        <result column="keyWord" property="keyWord" />
+    </resultMap>
+
+    <resultMap id="blogAndBlogType" type="com.blog.entity.Blog" extends="BaseResultMap">
+        <association property="blogtype" javaType="com.blog.entity.Blogtype">
+            <id property="id" column="type_id"/>
+            <result property="typeName" column="typeName"/>
+        </association>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, title, summary, releaseDate, clickHit, replyHit, content, typeId, keyWord
+    </sql>
+
+    <select id="findBlogDateAndCount" resultType="com.blog.entity.Blog">
+        SELECT DATE_FORMAT(releasedate,'%Y年%m月') releaseDateStr,COUNT(1) blogCount FROM t_blog
+        GROUP BY DATE_FORMAT(releasedate,'%Y年%m月')
+        order by DATE_FORMAT(releasedate,'%Y年%m月') desc
+    </select>
+
+    <!-- 分页查询博客信息 -->
+    <select id="findBlogByPage" resultMap="blogAndBlogType">
+        select b.*,t.id type_id,typename from t_blog b
+        inner join t_blogtype t on b.typeId = t.id
+        <where>
+            <if test="blog.keyWord!=null and blog.keyWord!=''">
+                and  b.keyword like concat('%',#{blog.keyWord},'%')
+            </if>
+            <if test="blog.typeId!=null">
+                and b.typeId = #{blog.typeId}
+            </if>
+            <if test="blog.releaseDateStr!=null and blog.releaseDateStr!=''">
+                and date_format(b.releasedate,'%Y年%m月') = #{blog.releaseDateStr}
+            </if>
+            <if test="blog.title!=null and blog.title!=''">
+                and  b.title like concat('%',#{blog.title},'%')
+            </if>
+        </where>
+        order by b.releasedate desc
+    </select>
+
+    <resultMap id="blogTypeResultMap" type="com.blog.entity.Blog" extends="BaseResultMap">
+<!--  关联博客类别-->
+        <association property="blogtype" javaType="com.blog.entity.Blogtype">
+            <id property="id" column="type_id"/>
+            <result property="typeName" column="typeName"/>
+        </association>
+    </resultMap>
+
+    <select id="findBlogById" resultMap="blogTypeResultMap">
+        select b.*,t.id type_id,t.typeName from t_blog b inner join t_blogtype t on b.typeId = t.id
+        where b.id = #{id}
+    </select>
+
+    <select id="findPrevBlog" resultType="com.blog.entity.Blog">
+        select * from t_blog where id &lt; #{id} order by id desc limit 1
+    </select>
+
+    <select id="findNextBlog" resultType="com.blog.entity.Blog">
+        select * from t_blog where id &gt; #{id} order by id asc limit 1
+    </select>
+</mapper>
